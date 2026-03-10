@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="InsuranceStudy">
+<meta name="theme-color" content="#0a1628">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icons/icon-167.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/icon-180.png">
+<title>Insurance Study Guide</title>
+<style>
+/* ─── Fonts inlined as system fallbacks for offline use ─── */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600&family=Courier+Prime:wght@400;700&display=swap');
+
+:root {
+  --navy: #0a1628;
+  --navy2: #132040;
+  --gold: #c9a84c;
+  --gold2: #f0cb6e;
+  --cream: #f5f0e8;
+  --muted: #8a9ab5;
+  --green: #2ecc8a;
+  --red: #e05c5c;
+  --blue: #4a9eff;
+  --card-bg: #111d35;
+  --border: rgba(201,168,76,0.25);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { height: 100%; }
+body {
+  font-family: 'Source Sans 3', -apple-system, sans-serif;
+  background: var(--navy);
+  color: var(--cream);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bot);
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 20% 20%, rgba(201,168,76,0.07) 0%, transparent 60%),
+              radial-gradient(ellipse at 80% 80%, rgba(74,158,255,0.05) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ─── Layout ─── */
+.app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 24px 16px 80px; }
+
+header { text-align: center; margin-bottom: 28px; }
+header h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(26px, 6vw, 44px);
+  font-weight: 900;
+  color: var(--gold2);
+  letter-spacing: -1px;
+  line-height: 1.1;
+}
+header p { color: var(--muted); font-size: 13px; margin-top: 6px; font-weight: 300; letter-spacing: 1px; text-transform: uppercase; }
+
+/* ─── Bottom tab bar (native app feel on iOS) ─── */
+.tabs {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  bottom: var(--safe-bot);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(10,22,40,0.97);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 100;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.tab-btn {
+  flex: 1; padding: 10px 4px 12px;
+  background: none; border: none;
+  color: var(--muted);
+  font-family: 'Source Sans 3', -apple-system, sans-serif;
+  font-size: 10px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  letter-spacing: 0.3px;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.tab-btn .tab-icon { font-size: 22px; }
+.tab-btn:hover { color: var(--cream); }
+.tab-btn.active { color: var(--gold2); }
+.tab-btn.active .tab-icon { transform: translateY(-2px); }
+
+/* ─── Sections ─── */
+.section { display: none; animation: fadeUp 0.35s ease; }
+.section.active { display: block; }
+@keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+
+/* ─── Controls ─── */
+.fc-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.fc-controls label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+select, .btn-sm {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  color: var(--cream);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-family: 'Source Sans 3', -apple-system, sans-serif;
+  font-size: 14px; cursor: pointer; outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  max-width: 100%;
+}
+select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23c9a84c' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; }
+
+.progress-bar-wrap { margin-bottom: 20px; }
+.progress-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+.progress-bar { height: 4px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); transition: width 0.4s ease; border-radius: 4px; }
+
+/* ─── Flashcard ─── */
+.card-scene { perspective: 1200px; margin-bottom: 20px; cursor: pointer; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.card-inner {
+  position: relative; width: 100%; min-height: 260px;
+  transition: transform 0.6s cubic-bezier(0.4,0.2,0.2,1);
+  transform-style: preserve-3d;
+}
+.card-scene.flipped .card-inner { transform: rotateY(180deg); }
+.card-face {
+  position: absolute; inset: 0;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 36px 28px; text-align: center;
+}
+.card-face.back { transform: rotateY(180deg); }
+.card-face::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, transparent 60%);
+  border-radius: 20px; pointer-events: none;
+}
+.card-badge {
+  position: absolute; top: 14px; left: 16px;
+  background: rgba(201,168,76,0.15);
+  color: var(--gold);
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 4px 10px; border-radius: 6px;
+  font-family: 'Courier Prime', 'Courier New', monospace;
+}
+.card-counter {
+  position: absolute; top: 16px; right: 16px;
+  color: var(--muted); font-size: 11px;
+  font-family: 'Courier Prime', 'Courier New', monospace;
+}
+.card-q { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(15px,3.5vw,21px); color: var(--gold2); margin-bottom: 10px; line-height: 1.3; }
+.card-sub { font-size: 12px; color: var(--muted); }
+.card-plan-name { font-family: 'Courier Prime','Courier New',monospace; font-size: 12px; color: var(--gold); letter-spacing: 1px; margin-bottom: 14px; }
+.card-answer { font-size: clamp(22px,5vw,40px); font-weight: 700; color: var(--cream); line-height: 1.1; }
+.card-answer-sub { font-size: 13px; color: var(--muted); margin-top: 8px; }
+.card-hint { font-size: 12px; color: var(--blue); margin-top: 14px; font-style: italic; line-height: 1.4; }
+.flip-hint { text-align: center; font-size: 12px; color: var(--muted); margin-bottom: 16px; letter-spacing: 0.5px; }
+.card-nav { display: flex; gap: 10px; justify-content: center; }
+.btn { padding: 13px 28px; border-radius: 12px; border: none; font-family: 'Source Sans 3', -apple-system, sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; touch-action: manipulation; }
+.btn-primary { background: var(--gold); color: var(--navy); }
+.btn-primary:active { background: var(--gold2); transform: scale(0.97); }
+.btn-outline { background: transparent; border: 1px solid var(--border); color: var(--cream); }
+.btn-outline:active { border-color: var(--gold); color: var(--gold); transform: scale(0.97); }
+
+/* ─── Quiz ─── */
+.quiz-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; gap: 10px; }
+.quiz-score { font-family: 'Courier Prime','Courier New',monospace; font-size: 14px; color: var(--muted); white-space: nowrap; }
+.quiz-score span { color: var(--gold2); font-weight: 700; }
+.q-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 18px; padding: 24px 20px; margin-bottom: 16px; }
+.q-card::before { content: attr(data-num); font-family: 'Courier Prime','Courier New',monospace; font-size: 10px; color: var(--gold); letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 12px; }
+.q-text { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(15px,3vw,19px); color: var(--cream); margin-bottom: 20px; line-height: 1.4; }
+.options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 400px) { .options { grid-template-columns: 1fr; } }
+.opt {
+  background: rgba(255,255,255,0.03); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 13px 14px;
+  font-size: 14px; color: var(--cream); cursor: pointer;
+  transition: all 0.2s; text-align: left;
+  font-family: 'Source Sans 3', -apple-system, sans-serif;
+  touch-action: manipulation;
+}
+.opt:active:not(.locked) { border-color: var(--gold); background: rgba(201,168,76,0.08); transform: scale(0.98); }
+.opt.correct { border-color: var(--green) !important; background: rgba(46,204,138,0.12) !important; color: var(--green) !important; font-weight: 600; }
+.opt.wrong { border-color: var(--red) !important; background: rgba(224,92,92,0.12) !important; color: var(--red) !important; }
+.opt.locked { cursor: default; }
+.explanation { margin-top: 14px; padding: 14px; background: rgba(74,158,255,0.08); border-left: 3px solid var(--blue); border-radius: 0 10px 10px 0; font-size: 13px; color: var(--blue); line-height: 1.5; display: none; }
+.quiz-result { text-align: center; padding: 40px 20px; }
+.result-score { font-family: 'Playfair Display', Georgia, serif; font-size: 68px; color: var(--gold2); font-weight: 900; }
+.result-label { font-size: 20px; color: var(--cream); margin: 10px 0 8px; }
+.result-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; line-height: 1.5; }
+
+/* ─── Compare ─── */
+.compare-pick { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }
+.compare-pick label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+.compare-table-wrap { overflow-x: auto; border-radius: 16px; border: 1px solid var(--border); -webkit-overflow-scrolling: touch; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 360px; }
+thead tr { background: rgba(201,168,76,0.1); }
+th { padding: 12px 14px; text-align: left; font-family: 'Courier Prime','Courier New',monospace; font-size: 10px; letter-spacing: 1.5px; color: var(--gold); text-transform: uppercase; font-weight: 700; }
+td { padding: 11px 14px; border-top: 1px solid rgba(255,255,255,0.05); color: var(--cream); vertical-align: top; }
+tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
+.category-cell { font-weight: 600; color: var(--gold2); font-size: 12px; white-space: nowrap; }
+.win-cell { color: var(--green); font-weight: 700; }
+.plan-header { font-family: 'Playfair Display', Georgia, serif; font-size: 14px; color: var(--cream); }
+
+/* ─── Tips ─── */
+.tips-grid { display: grid; gap: 14px; }
+.tip-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 22px 20px; position: relative; overflow: hidden; }
+.tip-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(180deg, var(--gold), var(--gold2)); border-radius: 3px 0 0 3px; }
+.tip-num { font-family: 'Courier Prime','Courier New',monospace; font-size: 10px; color: var(--gold); letter-spacing: 2px; margin-bottom: 8px; }
+.tip-title { font-family: 'Playfair Display', Georgia, serif; font-size: 17px; color: var(--cream); margin-bottom: 8px; }
+.tip-body { font-size: 13px; color: var(--muted); line-height: 1.7; }
+.tip-body strong { color: var(--cream); font-weight: 600; }
+.tip-example { margin-top: 10px; background: rgba(74,158,255,0.07); border-radius: 8px; padding: 10px 12px; font-size: 12px; color: var(--blue); line-height: 1.5; }
+.tip-example b { color: var(--gold2); }
+.legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 20px; }
+.legend-item { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; }
+.legend-abbr { font-family: 'Courier Prime','Courier New',monospace; font-size: 12px; color: var(--gold); }
+.legend-full { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+.section-title { font-family: 'Playfair Display', Georgia, serif; font-size: 20px; color: var(--gold2); margin-bottom: 16px; }
+.divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+/* Install banner */
+#installBanner {
+  display: none;
+  background: linear-gradient(135deg, var(--navy2), #1a2d50);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--cream);
+  line-height: 1.5;
+}
+#installBanner strong { color: var(--gold2); }
+#installBanner .close-banner { float: right; background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 0 0 0 10px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Insurance Plan<br>Study Guide</h1>
+    <p>Flashcards · Quizzes · Comparisons · Tips</p>
+  </header>
+
+  <!-- iOS install prompt -->
+  <div id="installBanner">
+    <button class="close-banner" onclick="document.getElementById('installBanner').style.display='none'">✕</button>
+    <strong>📲 Install as App:</strong> Tap the <strong>Share</strong> button (□↑) in Safari, then tap <strong>"Add to Home Screen"</strong> for the best experience — works fully offline!
+  </div>
+
+  <!-- ══ FLASHCARDS ══ -->
+  <div class="section active" id="flashcards">
+    <div class="fc-controls">
+      <label>By:</label>
+      <select id="fcMode" onchange="onModeChange()">
+        <option value="plan">Plan</option>
+        <option value="category">Category</option>
+        <option value="all">All Shuffled</option>
+      </select>
+      <select id="fcFilter" onchange="onFilterChange()"></select>
+      <button class="btn-sm" onclick="shuffleCards()">🔀</button>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-label" id="fcProgressLabel">Card 1 of 1</div>
+      <div class="progress-bar"><div class="progress-fill" id="fcProgressFill" style="width:0%"></div></div>
+    </div>
+    <div class="flip-hint">👆 Tap the card to reveal the answer</div>
+    <div class="card-scene" id="cardScene" onclick="flipCard()">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face front">
+          <div class="card-badge" id="fcBadge">CATEGORY</div>
+          <div class="card-counter" id="fcCounter">1/9</div>
+          <div class="card-q" id="cardQ">Loading...</div>
+          <div class="card-sub" id="cardSub"></div>
+        </div>
+        <div class="card-face back">
+          <div class="card-badge">ANSWER</div>
+          <div class="card-plan-name" id="backPlan"></div>
+          <div class="card-answer" id="cardAnswer"></div>
+          <div class="card-answer-sub" id="cardAnswerSub"></div>
+          <div class="card-hint" id="cardHint"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-nav">
+      <button class="btn btn-outline" onclick="prevCard()">← Prev</button>
+      <button class="btn btn-primary" onclick="nextCard()">Next →</button>
+    </div>
+  </div>
+
+  <!-- ══ QUIZ ══ -->
+  <div class="section" id="quiz">
+    <div id="quizActive">
+      <div class="quiz-header">
+        <div>
+          <div class="section-title" style="margin-bottom:4px">Test Yourself</div>
+          <div style="font-size:12px; color:var(--muted)">Tap the correct answer</div>
+        </div>
+        <div class="quiz-score">Score: <span id="quizScore">0</span>/<span id="quizTotal">0</span></div>
+      </div>
+      <div id="quizContainer"></div>
+      <div style="text-align:center; margin-top:20px">
+        <button class="btn btn-primary" onclick="generateQuiz()">🔄 New Quiz</button>
+      </div>
+    </div>
+    <div id="quizResult" class="quiz-result" style="display:none">
+      <div class="result-score" id="resultScore">0/0</div>
+      <div class="result-label" id="resultLabel">Nice work!</div>
+      <div class="result-sub" id="resultSub"></div>
+      <button class="btn btn-primary" onclick="retryQuiz()">Try Again</button>
+    </div>
+  </div>
+
+  <!-- ══ COMPARE ══ -->
+  <div class="section" id="compare">
+    <div class="section-title">Side-by-Side Compare</div>
+    <div class="compare-pick">
+      <label>A:</label><select id="planA" onchange="renderCompare()"></select>
+      <label>B:</label><select id="planB" onchange="renderCompare()"></select>
+    </div>
+    <div class="compare-table-wrap"><table id="compareTable"></table></div>
+  </div>
+
+  <!-- ══ TIPS ══ -->
+  <div class="section" id="tips">
+    <div class="section-title">Memory Tips</div>
+    <div class="tips-grid" id="tipsGrid"></div>
+    <div class="divider"></div>
+    <div class="section-title">Abbreviation Guide</div>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+
+<!-- Bottom nav -->
+<nav class="tabs">
+  <button class="tab-btn active" onclick="showSection('flashcards',this)"><span class="tab-icon">🃏</span>Flashcards</button>
+  <button class="tab-btn" onclick="showSection('quiz',this)"><span class="tab-icon">📝</span>Quiz</button>
+  <button class="tab-btn" onclick="showSection('compare',this)"><span class="tab-icon">⚖️</span>Compare</button>
+  <button class="tab-btn" onclick="showSection('tips',this)"><span class="tab-icon">💡</span>Tips</button>
+</nav>
+
+<script>
+// ═══ DATA ═══
+const PLANS = [
+  {name:"HF SIGN HMO",      premium:"$0",          medDeduct:"$300",  drugDeduct:"N/A",     pcp:"$0",      spec:"$40",     dental:"$1,000/yr",          vision:"$200/yr",  hearing:"$0–$1,475 copay",    otc:"$130/yr"},
+  {name:"HF SIGN PPO",      premium:"$55/mo",      medDeduct:"$500",  drugDeduct:"N/A",     pcp:"$0/$50",  spec:"$40/$75", dental:"$1,500/yr",          vision:"$75/yr",   hearing:"$0–$1,475 copay",    otc:"N/A"},
+  {name:"HF 65 Plus",       premium:"$0",          medDeduct:"$0",    drugDeduct:"N/A",     pcp:"$0",      spec:"$35",     dental:"$0 copay/$1,250/yr", vision:"$150/yr",  hearing:"$0–$1,475 copay",    otc:"$25/mo"},
+  {name:"HF I.B.P",         premium:"$35 (LIS $0)",medDeduct:"$0",    drugDeduct:"N/A",     pcp:"$0",      spec:"$25",     dental:"$0 copay covered",   vision:"$250/yr",  hearing:"$0–$1,475 copay",    otc:"$35/mo"},
+  {name:"HF CONNECT",       premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay covered",   vision:"$250/yr",  hearing:"$0–$1,475 copay",    otc:"$55/mo"},
+  {name:"HF L.I.P",         premium:"$25 (LIS $0)",medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$300/yr",  hearing:"$0–$1,475 copay",    otc:"$175/mo"},
+  {name:"VNS EasyCare",     premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$35",     dental:"$2,500/yr",          vision:"$300/yr",  hearing:"$1,500 / 3 yrs",     otc:"$107/quarter"},
+  {name:"VNS Dual",         premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$2,750/yr",          vision:"$300/yr",  hearing:"$1,400 / 3 yrs",     otc:"$235/mo"},
+  {name:"UHC Dual (1)",     premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$200/yr",  hearing:"$1,500/yr",          otc:"$98/quarter"},
+  {name:"UHC Dual (2)",     premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$200/yr",  hearing:"$2,200/yr",          otc:"$118/quarter"},
+  {name:"VCM Dual",         premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$350/yr",  hearing:"$1,500/yr",          otc:"$220/mo"},
+  {name:"Aetna Dual",       premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$165/yr",  hearing:"$0–$1,700",          otc:"$165/mo"},
+  {name:"Aetna HMO",        premium:"$0",          medDeduct:"$0",    drugDeduct:"$615",    pcp:"$0",      spec:"$10–$50", dental:"$0 copay",           vision:"$100/yr",  hearing:"$0–$1,700",          otc:"$15/quarter"},
+  {name:"WC Simple POS",    premium:"$0",          medDeduct:"$175",  drugDeduct:"$615",    pcp:"$0",      spec:"$15",     dental:"$0 copay",           vision:"$100/yr",  hearing:"$200/yr",            otc:"N/A"},
+  {name:"WC GiveBack",      premium:"$0",          medDeduct:"$0",    drugDeduct:"N/A",     pcp:"$0",      spec:"$30",     dental:"$0 copay",           vision:"$200/yr",  hearing:"$100/yr",            otc:"$65.50 GB"},
+  {name:"WC Dual",          premium:"$0",          medDeduct:"$0",    drugDeduct:"N/A",     pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$300/yr",  hearing:"$750/ear",           otc:"$131/mo"},
+  {name:"Anthem Dual",      premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$200/yr",  hearing:"$3,000/yr",          otc:"$155/mo"},
+  {name:"Humana PPO",       premium:"$0",          medDeduct:"$25",   drugDeduct:"$615",    pcp:"$0",      spec:"$40",     dental:"$0 copay",           vision:"$200/yr",  hearing:"$699–$999 copay",    otc:"N/A"},
+  {name:"Humana Dual",      premium:"$0",          medDeduct:"$0",    drugDeduct:"$615",    pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$125/yr",  hearing:"$0 copay / 2 fits",  otc:"$125/mo"},
+  {name:"Healthspring PPO", premium:"$0",          medDeduct:"$400",  drugDeduct:"$0–$250", pcp:"$0",      spec:"$40",     dental:"$600/yr",            vision:"N/A",      hearing:"$399–$1,800",        otc:"$45/quarter"},
+];
+
+const CATEGORIES = [
+  {key:"premium",   label:"Monthly Premium",   icon:"💰"},
+  {key:"medDeduct", label:"Medical Deductible", icon:"🏥"},
+  {key:"drugDeduct",label:"Drug Deductible",    icon:"💊"},
+  {key:"pcp",       label:"PCP Copay",          icon:"👨‍⚕️"},
+  {key:"spec",      label:"Specialist Copay",   icon:"🔬"},
+  {key:"dental",    label:"Dental Benefit",     icon:"🦷"},
+  {key:"vision",    label:"Vision Benefit",     icon:"👁️"},
+  {key:"hearing",   label:"Hearing Benefit",    icon:"👂"},
+  {key:"otc",       label:"OTC / Flex Benefit", icon:"🛒"},
+];
+
+// ═══ FLASHCARDS ═══
+let cards=[], cardIdx=0, isFlipped=false;
+
+function getHint(key,val){
+  const h={
+    premium: val==='$0'?'✓ No monthly cost to member':`Member pays ${val} per month`,
+    medDeduct: val==='$0'?'✓ No deductible — coverage starts immediately':`Must pay ${val} before coverage kicks in`,
+    drugDeduct: val==='N/A'?'✓ No separate drug deductible':val==='$0'?'✓ Drug coverage with no deductible':`Drug deductible: ${val}`,
+    pcp: val==='$0'?'✓ Free primary care visits!':`Each PCP visit costs ${val}`,
+    spec: val==='$0'?'✓ Free specialist visits!':`Specialist visits cost ${val}`,
+    dental: val.includes('/yr')?`Annual dental allowance: ${val}`:'✓ Dental services covered at no copay',
+    vision: val&&val!=='N/A'?`Annual vision allowance: ${val}`:'No vision benefit on this plan',
+    hearing:`Hearing aid coverage: ${val}`,
+    otc: val==='N/A'?'No OTC/flex benefit on this plan':`Extra spending card: ${val}`,
+  };
+  return h[key]||'';
+}
+
+function buildCards(){
+  const mode=document.getElementById('fcMode').value;
+  const filter=document.getElementById('fcFilter').value;
+  cards=[];
+  if(mode==='plan'){
+    const plan=PLANS.find(p=>p.name===filter)||PLANS[0];
+    CATEGORIES.forEach(cat=>{
+      cards.push({q:`What is the ${cat.label}?`,cat:cat.label,plan:plan.name,answer:plan[cat.key],hint:getHint(cat.key,plan[cat.key])});
+    });
+  } else if(mode==='category'){
+    const cat=CATEGORIES.find(c=>c.key===filter)||CATEGORIES[0];
+    PLANS.forEach(plan=>{
+      cards.push({q:`What is the ${cat.label} for this plan?`,cat:cat.label,plan:plan.name,answer:plan[cat.key],hint:getHint(cat.key,plan[cat.key])});
+    });
+  } else {
+    PLANS.forEach(plan=>{
+      CATEGORIES.forEach(cat=>{
+        cards.push({q:`What is the ${cat.label} for this plan?`,cat:cat.label,plan:plan.name,answer:plan[cat.key],hint:getHint(cat.key,plan[cat.key])});
+      });
+    });
+    cards.sort(()=>Math.random()-0.5);
+  }
+}
+
+function populateFilter(){
+  const mode=document.getElementById('fcMode').value;
+  const sel=document.getElementById('fcFilter');
+  sel.innerHTML='';
+  if(mode==='plan'){
+    PLANS.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.name;sel.appendChild(o);});
+  } else if(mode==='category'){
+    CATEGORIES.forEach(c=>{const o=document.createElement('option');o.value=c.key;o.textContent=c.label;sel.appendChild(o);});
+  } else {
+    sel.innerHTML='<option value="all">All Plans & Categories</option>';
+  }
+}
+
+function onModeChange(){populateFilter();buildCards();cardIdx=0;isFlipped=false;document.getElementById('cardScene').classList.remove('flipped');renderCard();}
+function onFilterChange(){buildCards();cardIdx=0;isFlipped=false;document.getElementById('cardScene').classList.remove('flipped');renderCard();}
+function resetFlashcards(){populateFilter();buildCards();cardIdx=0;isFlipped=false;document.getElementById('cardScene').classList.remove('flipped');renderCard();}
+function shuffleCards(){cards.sort(()=>Math.random()-0.5);cardIdx=0;isFlipped=false;document.getElementById('cardScene').classList.remove('flipped');renderCard();}
+
+function renderCard(){
+  const c=cards[cardIdx];if(!c)return;
+  document.getElementById('fcBadge').textContent=c.cat;
+  document.getElementById('fcCounter').textContent=`${cardIdx+1}/${cards.length}`;
+  document.getElementById('cardQ').textContent=c.q;
+  document.getElementById('cardSub').textContent=c.plan;
+  document.getElementById('backPlan').textContent='📋 '+c.plan;
+  document.getElementById('cardAnswer').textContent=c.answer;
+  document.getElementById('cardAnswerSub').textContent=c.cat;
+  document.getElementById('cardHint').textContent=c.hint;
+  const pct=((cardIdx+1)/cards.length)*100;
+  document.getElementById('fcProgressFill').style.width=pct+'%';
+  document.getElementById('fcProgressLabel').textContent=`Card ${cardIdx+1} of ${cards.length}`;
+}
+
+function flipCard(){isFlipped=!isFlipped;document.getElementById('cardScene').classList.toggle('flipped',isFlipped);}
+function nextCard(){if(cardIdx<cards.length-1)cardIdx++;isFlipped=false;document.getElementById('cardScene').classList.remove('flipped');renderCard();}
+function prevCard(){if(cardIdx>0)cardIdx--;isFlipped=false;document.getElementById('cardScene').classList.remove('flipped');renderCard();}
+
+// ═══ QUIZ ═══
+let quizQ=[],answered=0,correct=0;
+
+function generateQuiz(){
+  document.getElementById('quizActive').style.display='block';
+  document.getElementById('quizResult').style.display='none';
+  answered=0;correct=0;
+  let pool=[];
+  PLANS.forEach(p=>CATEGORIES.forEach(c=>pool.push({p,c})));
+  pool.sort(()=>Math.random()-0.5);
+  pool=pool.slice(0,8);
+  quizQ=pool.map(({p,c})=>{
+    const correctAns=p[c.key];
+    let others=PLANS.filter(x=>x.name!==p.name&&x[c.key]!==correctAns).map(x=>x[c.key]);
+    others.sort(()=>Math.random()-0.5);
+    let opts=[correctAns,...others.slice(0,3)];
+    opts.sort(()=>Math.random()-0.5);
+    return{q:`What is the ${c.label} for <strong>${p.name}</strong>?`,correct:correctAns,opts,explanation:`${p.name} → ${c.label}: ${correctAns}. ${getHint(c.key,correctAns)}`};
+  });
+  document.getElementById('quizScore').textContent=correct;
+  document.getElementById('quizTotal').textContent=quizQ.length;
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const container=document.getElementById('quizContainer');
+  container.innerHTML='';
+  quizQ.forEach((q,i)=>{
+    const div=document.createElement('div');
+    div.className='q-card';
+    div.setAttribute('data-num',`Question ${i+1} of ${quizQ.length}`);
+    div.innerHTML=`<div class="q-text">${q.q}</div>
+      <div class="options" id="opts-${i}">${q.opts.map(o=>`<button class="opt" data-val="${o.replace(/"/g,'&quot;')}" onclick="answerQ(${i},this)">${o}</button>`).join('')}</div>
+      <div class="explanation" id="exp-${i}">${q.explanation}</div>`;
+    container.appendChild(div);
+  });
+}
+
+function answerQ(idx,btn){
+  const q=quizQ[idx];
+  const val=btn.dataset.val;
+  const opts=document.querySelectorAll(`#opts-${idx} .opt`);
+  opts.forEach(o=>{o.classList.add('locked');if(o.dataset.val===q.correct)o.classList.add('correct');});
+  if(val!==q.correct)btn.classList.add('wrong');
+  else{correct++;document.getElementById('quizScore').textContent=correct;}
+  document.getElementById(`exp-${idx}`).style.display='block';
+  answered++;
+  if(answered===quizQ.length){
+    setTimeout(()=>{
+      document.getElementById('quizActive').style.display='none';
+      document.getElementById('quizResult').style.display='block';
+      const pct=Math.round((correct/quizQ.length)*100);
+      document.getElementById('resultScore').textContent=`${correct}/${quizQ.length}`;
+      document.getElementById('resultLabel').textContent=pct>=80?'🏆 Excellent!':pct>=60?'👍 Good Job!':'📚 Keep Practicing!';
+      document.getElementById('resultSub').textContent=pct>=80?"You're ready to talk to customers with confidence!":pct>=60?"Review the plans you missed and try again.":"Spend more time with flashcards, then retry.";
+    },1000);
+  }
+}
+function retryQuiz(){generateQuiz();}
+
+// ═══ COMPARE ═══
+function populateCompare(){
+  ['planA','planB'].forEach((id,i)=>{
+    const sel=document.getElementById(id);
+    PLANS.forEach((p,j)=>{
+      const o=document.createElement('option');
+      o.value=j;o.textContent=p.name;
+      if(j===i)o.selected=true;
+      sel.appendChild(o);
+    });
+  });
+  renderCompare();
+}
+
+function renderCompare(){
+  const a=PLANS[parseInt(document.getElementById('planA').value)];
+  const b=PLANS[parseInt(document.getElementById('planB').value)];
+  const t=document.getElementById('compareTable');
+  t.innerHTML=`<thead><tr><th>Category</th><th><div class="plan-header">${a.name}</div></th><th><div class="plan-header">${b.name}</div></th></tr></thead><tbody>${CATEGORIES.map(cat=>{
+    const av=a[cat.key],bv=b[cat.key];
+    const aBetter=isBetter(cat.key,av,bv),bBetter=isBetter(cat.key,bv,av);
+    return`<tr><td class="category-cell">${cat.icon} ${cat.label}</td><td class="${aBetter?'win-cell':''}">${av}${aBetter?' ✓':''}</td><td class="${bBetter?'win-cell':''}">${bv}${bBetter?' ✓':''}</td></tr>`;
+  }).join('')}</tbody>`;
+}
+
+function isBetter(key,a,b){
+  if(a===b||!a||a==='N/A')return false;
+  if(!b||b==='N/A')return true;
+  const benefitKeys=['dental','vision','hearing','otc'];
+  const aNum=extractNum(a),bNum=extractNum(b);
+  return benefitKeys.includes(key)?aNum>bNum:aNum<bNum;
+}
+function extractNum(s){if(!s)return 0;const m=s.match(/[\d,]+/);return m?parseFloat(m[0].replace(',','')):0;}
+
+// ═══ TIPS ═══
+const TIPS=[
+  {title:"Group Plans Into Families",body:`Don't memorize all 20 at once. Group by carrier: <strong>HF plans</strong> (6 plans), <strong>VNS plans</strong> (2), <strong>UHC Dual</strong> (2), <strong>Aetna</strong> (2), <strong>WC plans</strong> (3), plus Anthem Dual, Humana PPO, Humana Dual, Healthspring PPO. Once you know a family's personality, the individual plans are much easier.`,example:`<b>Memory trick:</b> "HF is the big family with 6 kids — they range from basic (SIGN HMO) to premium (L.I.P with $175/mo OTC)"`},
+  {title:"Anchor on the $0 Premium Rule",body:`Almost every plan is <strong>$0 premium</strong>. The exception: <strong>HF SIGN PPO at $55/mo</strong>. Also: <strong>HF I.B.P ($35)</strong> and <strong>HF L.I.P ($25)</strong> charge a premium <em>unless</em> the member has LIS (Low Income Subsidy) — then it drops to $0.`,example:`<b>Quick fact:</b> "Most plans have zero monthly premium — the only true exception is HF SIGN PPO at $55."`},
+  {title:"Memorize the 'Dual Zero Club'",body:`Dual plans almost universally have <strong>$0 premium, $0 deductible, $0 PCP</strong>. Think of them as "full zero" plans. Covers: VNS Dual, UHC Dual 1 & 2, VCM Dual, Aetna Dual, WC Dual, Anthem Dual, Humana Dual.`,example:`<b>Pitch:</b> "With our dual plans, you typically pay nothing — no premium, no deductible, free doctor visits."`},
+  {title:"Dental by Tiers",body:`<strong>Top tier:</strong> VNS Dual ($2,750/yr), VNS EasyCare ($2,500/yr). <strong>Mid tier:</strong> HF SIGN PPO ($1,500/yr), HF SIGN HMO ($1,000/yr). <strong>$600:</strong> Healthspring PPO. <strong>$0 copay covered:</strong> most dual plans.`,example:`<b>Customer says "I need dental":</b> Lead with VNS Dual or VNS EasyCare — highest annual dental in the portfolio.`},
+  {title:"OTC Is Your Best Selling Hook",body:`The OTC/Flex benefit is like a monthly debit card for groceries, vitamins, and OTC medicine. Top plans: <strong>VNS Dual $235/mo</strong>, <strong>VCM Dual $220/mo</strong>, <strong>HF L.I.P $175/mo</strong>, <strong>Anthem Dual $155/mo</strong>. No OTC: HF SIGN PPO, WC Simple POS, Humana PPO.`,example:`<b>Pitch:</b> "VNS Dual gives $235 every month on a flex card — that's $2,820 a year back in your pocket."`},
+  {title:"Hearing Is Almost Always Covered",body:`Every plan covers hearing. Highest: <strong>Anthem Dual ($3,000/yr)</strong>, <strong>UHC Dual 2 ($2,200/yr)</strong>. Notable: <strong>Humana Dual</strong> offers $0 copay for 2 hearing fittings. Lowest: WC GiveBack ($100/yr), WC Simple POS ($200/yr).`,example:`<b>Customer needs hearing aids:</b> Lead with Anthem Dual ($3,000/yr) or UHC Dual 2 ($2,200/yr).`},
+  {title:"The '3 Questions' Customer Framework",body:`Ask: <strong>(1) Many doctor visits?</strong> → Focus on specialist copay. <strong>(2) Many medications?</strong> → Focus on drug deductible. <strong>(3) What extras matter most?</strong> → Focus on OTC, dental, vision, hearing. This narrows 20 plans to 2–3 instantly.`,example:`<b>Example:</b> Customer sees many specialists + wants OTC → Rule out high spec copay plans, then rank by OTC benefit.`},
+  {title:"Weekly Drill Schedule",body:`<strong>Week 1:</strong> Learn plan names by carrier family. <strong>Week 2:</strong> Memorize premiums & deductibles. <strong>Week 3:</strong> Memorize benefits (dental/vision/hearing/OTC). <strong>Week 4:</strong> Practice comparisons. Daily repetition of 5–10 flashcards beats long cramming sessions.`,example:`<b>Pro tip:</b> Pick 3 "spotlight" plans per week — know them cold. Add 3 more the next week.`},
+];
+
+const LEGEND=[
+  {abbr:"HMO",full:"Health Maintenance Org — requires referrals for specialists"},
+  {abbr:"PPO",full:"Preferred Provider Org — see any doctor, no referral needed"},
+  {abbr:"POS",full:"Point of Service — hybrid HMO/PPO"},
+  {abbr:"Dual",full:"Covers both Medicare & Medicaid (D-SNP)"},
+  {abbr:"LIS",full:"Low Income Subsidy — reduces member's premium to $0"},
+  {abbr:"OTC",full:"Over-the-Counter benefit / flex spending card"},
+  {abbr:"PCP",full:"Primary Care Physician (regular doctor)"},
+  {abbr:"Spec",full:"Specialist (cardiologist, dermatologist, etc.)"},
+  {abbr:"Deduct",full:"Deductible — amount paid before plan covers costs"},
+  {abbr:"IBP",full:"Individual Business Plan"},
+  {abbr:"LIP",full:"Low Income Plan"},
+  {abbr:"GB",full:"Give Back — premium reduction via Social Security"},
+  {abbr:"D-SNP",full:"Dual Special Needs Plan"},
+  {abbr:"Yr/Mo",full:"Per year / Per month"},
+];
+
+function renderTips(){
+  const grid=document.getElementById('tipsGrid');
+  TIPS.forEach((t,i)=>{
+    const div=document.createElement('div');
+    div.className='tip-card';
+    div.innerHTML=`<div class="tip-num">TIP ${String(i+1).padStart(2,'0')}</div><div class="tip-title">${t.title}</div><div class="tip-body">${t.body}</div><div class="tip-example">${t.example}</div>`;
+    grid.appendChild(div);
+  });
+  const leg=document.getElementById('legend');
+  LEGEND.forEach(l=>{
+    const div=document.createElement('div');
+    div.className='legend-item';
+    div.innerHTML=`<div class="legend-abbr">${l.abbr}</div><div class="legend-full">${l.full}</div>`;
+    leg.appendChild(div);
+  });
+}
+
+// ═══ NAV ═══
+function showSection(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ═══ PWA SERVICE WORKER ═══
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// ═══ iOS INSTALL BANNER ═══
+function isIOS(){return/iphone|ipad|ipod/i.test(navigator.userAgent);}
+function isInStandaloneMode(){return window.navigator.standalone===true;}
+
+// ═══ INIT ═══
+document.addEventListener('DOMContentLoaded',()=>{
+  populateFilter();
+  buildCards();
+  renderCard();
+  populateCompare();
+  generateQuiz();
+  renderTips();
+  if(isIOS()&&!isInStandaloneMode()){
+    document.getElementById('installBanner').style.display='block';
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#0a1628"/>
+  <rect x="40" y="40" width="432" height="432" rx="60" fill="#132040"/>
+  <!-- Shield shape -->
+  <path d="M256 80 L380 130 L380 260 Q380 360 256 430 Q132 360 132 260 L132 130 Z" fill="#1a2d4e" stroke="#c9a84c" stroke-width="8"/>
+  <!-- Dollar/medical cross -->
+  <rect x="236" y="160" width="40" height="160" rx="8" fill="#c9a84c"/>
+  <rect x="176" y="220" width="160" height="40" rx="8" fill="#c9a84c"/>
+  <!-- Sparkle dots -->
+  <circle cx="140" cy="100" r="10" fill="#f0cb6e" opacity="0.6"/>
+  <circle cx="372" cy="100" r="7" fill="#f0cb6e" opacity="0.4"/>
+  <circle cx="390" cy="380" r="6" fill="#f0cb6e" opacity="0.3"/>
+</svg>
