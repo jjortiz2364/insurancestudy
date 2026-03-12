@@ -2,6 +2,7 @@ const CACHE = 'insurance-study-v1';
 const ASSETS = [
   '/index.html',
   '/manifest.json',
+  '/netlify.toml',
   '/icons/icon-120.png',
   '/icons/icon-152.png',
   '/icons/icon-167.png',
