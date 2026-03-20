@@ -311,6 +311,20 @@ tr:nth-child(even) td { background: rgba(255,255,255,0.015); }
         </div>
         <div class="quiz-score">Score: <span id="quizScore">0</span>/<span id="quizTotal">0</span></div>
       </div>
+      <div class="fc-controls" style="margin-bottom:20px">
+        <label>Quiz on:</label>
+        <select id="qzMode" onchange="onQuizModeChange()">
+          <option value="all">Everything</option>
+          <option value="plan">One Plan</option>
+          <option value="category">One Category</option>
+        </select>
+        <select id="qzFilter" onchange="generateQuiz()"></select>
+        <select id="qzCount" onchange="generateQuiz()">
+          <option value="8">8 Qs</option>
+          <option value="12">12 Qs</option>
+          <option value="20">20 Qs</option>
+        </select>
+      </div>
       <div id="quizContainer"></div>
       <div style="text-align:center; margin-top:20px">
         <button class="btn btn-primary" onclick="generateQuiz()">🔄 New Quiz</button>
@@ -360,8 +374,8 @@ const PLANS = [
   {name:"HF 65 Plus",       premium:"$0",          medDeduct:"$0",    drugDeduct:"N/A",     pcp:"$0",      spec:"$35",     dental:"$0 copay/$1,250/yr", vision:"$150/yr",  hearing:"$0–$1,475 copay",    otc:"$25/mo"},
   {name:"HF I.B.P",         premium:"$35 (LIS $0)",medDeduct:"$0",    drugDeduct:"N/A",     pcp:"$0",      spec:"$25",     dental:"$0 copay covered",   vision:"$250/yr",  hearing:"$0–$1,475 copay",    otc:"$35/mo"},
   {name:"HF CONNECT",       premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay covered",   vision:"$250/yr",  hearing:"$0–$1,475 copay",    otc:"$55/mo"},
-  {name:"HF L.I.P",         premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$300/yr",  hearing:"$0–$1,475 copay",    otc:"$175/mo"},
-  {name:"VNS EasyCare",     premium:"$25 (LIS $0)",medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$35",     dental:"$2,500/yr",          vision:"$300/yr",  hearing:"$1,500 / 3 yrs",     otc:"$107/quarter"},
+  {name:"HF L.I.P",         premium:"$25 (LIS $0)",medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$300/yr",  hearing:"$0–$1,475 copay",    otc:"$175/mo"},
+  {name:"VNS EasyCare",     premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$35",     dental:"$2,500/yr",          vision:"$300/yr",  hearing:"$1,500 / 3 yrs",     otc:"$107/quarter"},
   {name:"VNS Dual",         premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$2,750/yr",          vision:"$300/yr",  hearing:"$1,400 / 3 yrs",     otc:"$235/mo"},
   {name:"UHC Dual (1)",     premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$200/yr",  hearing:"$1,500/yr",          otc:"$98/quarter"},
   {name:"UHC Dual (2)",     premium:"$0",          medDeduct:"$0",    drugDeduct:"$0",      pcp:"$0",      spec:"$0",      dental:"$0 copay",           vision:"$200/yr",  hearing:"$2,200/yr",          otc:"$118/quarter"},
@@ -471,21 +485,60 @@ function prevCard(){if(cardIdx>0)cardIdx--;isFlipped=false;document.getElementBy
 // ═══ QUIZ ═══
 let quizQ=[],answered=0,correct=0;
 
+function populateQuizFilter(){
+  const mode=document.getElementById('qzMode').value;
+  const sel=document.getElementById('qzFilter');
+  sel.innerHTML='';
+  if(mode==='plan'){
+    PLANS.forEach(p=>{const o=document.createElement('option');o.value=p.name;o.textContent=p.name;sel.appendChild(o);});
+    sel.style.display='inline-block';
+  } else if(mode==='category'){
+    CATEGORIES.forEach(c=>{const o=document.createElement('option');o.value=c.key;o.textContent=c.label;sel.appendChild(o);});
+    sel.style.display='inline-block';
+  } else {
+    sel.style.display='none';
+  }
+}
+
+function onQuizModeChange(){populateQuizFilter();generateQuiz();}
+
 function generateQuiz(){
   document.getElementById('quizActive').style.display='block';
   document.getElementById('quizResult').style.display='none';
   answered=0;correct=0;
+  const mode=document.getElementById('qzMode').value;
+  const filter=document.getElementById('qzFilter').value;
+  const count=parseInt(document.getElementById('qzCount').value);
   let pool=[];
-  PLANS.forEach(p=>CATEGORIES.forEach(c=>pool.push({p,c})));
+  if(mode==='plan'){
+    const plan=PLANS.find(p=>p.name===filter)||PLANS[0];
+    CATEGORIES.forEach(c=>pool.push({p:plan,c}));
+  } else if(mode==='category'){
+    const cat=CATEGORIES.find(c=>c.key===filter)||CATEGORIES[0];
+    PLANS.forEach(p=>pool.push({p,c:cat}));
+  } else {
+    PLANS.forEach(p=>CATEGORIES.forEach(c=>pool.push({p,c})));
+  }
   pool.sort(()=>Math.random()-0.5);
-  pool=pool.slice(0,8);
+  pool=pool.slice(0,count);
   quizQ=pool.map(({p,c})=>{
     const correctAns=p[c.key];
-    let others=PLANS.filter(x=>x.name!==p.name&&x[c.key]!==correctAns).map(x=>x[c.key]);
+    // For plan mode, wrong answers come from other categories on same plan
+    // For category mode, wrong answers come from other plans same category
+    // For all mode, wrong answers from other plans same category
+    let others;
+    if(mode==='plan'){
+      others=CATEGORIES.filter(x=>x.key!==c.key&&p[x.key]!==correctAns).map(x=>p[x.key]);
+    } else {
+      others=PLANS.filter(x=>x.name!==p.name&&x[c.key]!==correctAns).map(x=>x[c.key]);
+    }
     others.sort(()=>Math.random()-0.5);
     let opts=[correctAns,...others.slice(0,3)];
     opts.sort(()=>Math.random()-0.5);
-    return{q:`What is the ${c.label} for <strong>${p.name}</strong>?`,correct:correctAns,opts,explanation:`${p.name} → ${c.label}: ${correctAns}. ${getHint(c.key,correctAns)}`};
+    const qText=mode==='plan'
+      ?`For <strong>${p.name}</strong>, what is the ${c.label}?`
+      :`What is the ${c.label} for <strong>${p.name}</strong>?`;
+    return{q:qText,correct:correctAns,opts,explanation:`${p.name} → ${c.label}: ${correctAns}. ${getHint(c.key,correctAns)}`};
   });
   document.getElementById('quizScore').textContent=correct;
   document.getElementById('quizTotal').textContent=quizQ.length;
@@ -634,6 +687,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   buildCards();
   renderCard();
   populateCompare();
+  document.getElementById('qzFilter').style.display='none';
+  populateQuizFilter();
   generateQuiz();
   renderTips();
   if(isIOS()&&!isInStandaloneMode()){
